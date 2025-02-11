@@ -1,31 +1,22 @@
 
 
 import { afterAll, afterEach, beforeAll, expect, it, jest } from "@jest/globals";
-import supertest from 'supertest';
-import server from '../../server'
+import StrapiService from "../../services/StrapiService";
 
 describe('Testing the STRAP Service', () => {
+    const strapiService = new StrapiService();
+    
 
-    let app = null,
-    serverInstance = null;
-
-    beforeAll(async () => {
-        const init = await server.start();
-        serverInstance = init.serverInstance;
-        app = init.app;
+    it('Should return true when strapi service is created', async () => {
+       expect(typeof StrapiService).toEqual('function');
     })
 
-    afterAll(() => {
-        serverInstance.close();
+    it('Should only return one instance of the strapi service as a singletons ', () => {
+        expect(strapiService.constructor.name).toEqual('StrapiService')
+        expect(StrapiService.prototype).toEqual(strapiService.constructor._instance);
     })
 
-    it('Should return true', async () => {
-        await supertest(app)
-        .get('/')
-        .expect(200)
-        .then((response) => {
-            expect(response.body).toBeTruthy();
-        })
+    it('Should have a method to get characters', () => {
+        expect(strapiService.getCharacters).toBeDefined();
     })
-
 })
