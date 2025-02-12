@@ -2,7 +2,9 @@
 
 import { afterAll, afterEach, beforeAll, expect, it, jest } from "@jest/globals";
 import supertest from 'supertest';
-import server from '../../server'
+import server from '../../server';
+
+import { cache } from "../../cache/swapi.cache";
 
 describe('Testing the STRAP Service', () => {
 
@@ -15,6 +17,8 @@ describe('Testing the STRAP Service', () => {
         app = init.app;
     })
 
+ 
+
     afterAll(() => {
         serverInstance.close();
     })
@@ -26,6 +30,30 @@ describe('Testing the STRAP Service', () => {
         .then((response) => {
             expect(response.body).toBeTruthy();
             expect(Object.keys(response.body).includes('data')).toBeTruthy();
+        })
+    })
+
+    it('Should return a cached version of characters and remove the cache and verify', async () => {
+        cache.set("swapi-characters",
+            {data: [{name: 'solo', mock: true}]},
+            1000
+        )
+        await supertest(app)
+        .get('/characters')
+        .expect(200)
+        .then((response) => {
+            cache.del('swapi-characters')
+            expect(response.body).toBeTruthy();
+            expect(Object.keys(response.body).includes('data')).toBeTruthy();
+            expect(response.body.data[0].mock).toBeTruthy();
+
+           supertest(app)
+            .get('/characters')
+            .expect(200)
+            .then((response) => {
+                expect(response.body).toBeTruthy();
+                expect(response.body.data[0].mock).toBeFalsy();
+            })
         })
     })
 
